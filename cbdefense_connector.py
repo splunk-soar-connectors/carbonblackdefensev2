@@ -191,7 +191,8 @@ class CarbonBlackDefenseConnector(BaseConnector):
             message = resp_json["message"]
         else:
             message = "Error from server. Status Code: {0} Data from server: {1}".format(
-                r.status_code, r.text.replace("{", "{{").replace("}", "}}"))
+                r.status_code, r.text.replace("{", "{{").replace("}", "}}")
+            )
 
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
@@ -327,7 +328,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 "name": param["name"],
                 "description": param["description"],
                 "priorityLevel": param["priority"],
-                "version": 2  # This is required to be 2 by the API
+                "version": 2   # This is required to be 2 by the API
             }
         }
 
@@ -613,7 +614,8 @@ class CarbonBlackDefenseConnector(BaseConnector):
             return ret_val
 
         ret_val, resp_json_search_result = self._make_rest_call(
-            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True)
+            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
+        )
 
         if phantom.is_fail(ret_val):
             return ret_val
@@ -684,7 +686,8 @@ class CarbonBlackDefenseConnector(BaseConnector):
             return ret_val
 
         ret_val, resp_json_search_result = self._make_rest_call(
-            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True)
+            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
+        )
 
         if phantom.is_fail(ret_val):
             return ret_val
@@ -873,6 +876,7 @@ if __name__ == "__main__":
     if username is not None and password is None:
         # User specified a username but not a password, so ask
         import getpass
+
         password = getpass.getpass("Password: ")
     if username and password:
         try:
