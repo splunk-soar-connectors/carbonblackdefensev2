@@ -723,7 +723,6 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 CBD_SEARCH_ALERT_API.format(self._org_key), action_result, method="post", data=data, is_new_api=True
             )
 
-
             if phantom.is_fail(ret_val):
                 return ret_val
 
