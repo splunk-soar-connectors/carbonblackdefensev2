@@ -328,7 +328,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 "name": param["name"],
                 "description": param["description"],
                 "priorityLevel": param["priority"],
-                "version": 2   # This is required to be 2 by the API
+                "version": 2,  # This is required to be 2 by the API
             }
         }
 
