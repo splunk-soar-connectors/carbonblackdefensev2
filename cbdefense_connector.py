@@ -603,21 +603,18 @@ class CarbonBlackDefenseConnector(BaseConnector):
         )
         if phantom.is_fail(ret_val):
             return ret_val
-
         job_id = resp_json.get("job_id")
         job_name = "search_jobs"
-        ret_val, is_completed_eq_contacted = self.retry_search_event(job_id, action_result, job_name)
+
+        ret_val, resp_json_search_result, job_status = self._get_results(job_id, action_result, job_name)
         if phantom.is_fail(ret_val):
             return ret_val
 
-        ret_val, resp_json_search_result = self._make_rest_call(
-            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-        )
-
-        if phantom.is_fail(ret_val):
-            return ret_val
+        if not job_status:
+            return action_result.set_status(phantom.APP_ERROR, "Search job did not finish in time")
 
         results = resp_json_search_result.get("results", [])
+        self.debug_print(f"responses json for results is {results}")
 
         for result in results:
             action_result.add_data(result)
@@ -626,9 +623,31 @@ class CarbonBlackDefenseConnector(BaseConnector):
         summary["num_results"] = total_result
 
         message = "Num results: {0}".format(total_result)
-        if not is_completed_eq_contacted:
-            message += CBD_COMPLETED_NOT_EQ_CONTACTED
         return action_result.set_status(phantom.APP_SUCCESS, message)
+
+    def _get_results(self, job_id, action_result, job_name):
+        start_time = time.time()
+        resp_json_search_event = None
+        ret_val = None
+
+        while True:
+            elapsed_time = time.time() - start_time
+            if elapsed_time > CBD_MAX_RESULTS_TIMEOUT:
+                return ret_val, resp_json_search_event, False
+
+            if job_name == "search_jobs" or job_name == "detail_jobs":
+                params = {"rows": 500}
+                ret_val, resp_json_search_event = self._make_rest_call(
+                    CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, params=params, is_new_api=True
+                )
+
+            if phantom.is_fail(ret_val):
+                return ret_val, resp_json_search_event, False
+
+            if resp_json_search_event.get("completed") == resp_json_search_event.get("contacted"):
+                return ret_val, resp_json_search_event, True
+
+            time.sleep(5)
 
     def retry_search_event(self, job_id, action_result, job_name):
         max_retry = 3
@@ -637,15 +656,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         status = False
         while max_retry > 0:
             max_retry -= 1
-            if job_name == "search_jobs":
-                ret_val, resp_json_search_event = self._make_rest_call(
-                    CBD_EVENT_JOB_SEARCH_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-                )
-            elif job_name == "detail_jobs":
-                ret_val, resp_json_search_event = self._make_rest_call(
-                    CBD_EVENT_JOB_DETAILS_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-                )
-            elif job_name == "process_jobs":
+            if job_name == "process_jobs":
                 ret_val, resp_json_search_event = self._make_rest_call(
                     CBD_LIST_PROCESS_VERIFY_JOB_API.format(self._org_key, job_id), action_result, is_new_api=True
                 )
@@ -666,7 +677,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         params = {}
         my_list = list(filter(None, param["id"].split(",")))
-        params["event_ids"] = my_list
+        params["observation_ids"] = my_list
         self.debug_print("query parameters for getEvent are", format(params))
 
         ret_val, resp_json = self._make_rest_call(
@@ -677,17 +688,14 @@ class CarbonBlackDefenseConnector(BaseConnector):
             return ret_val
         job_id = resp_json.get("job_id")
         job_name = "detail_jobs"
-        ret_val, is_completed_eq_contacted = self.retry_search_event(job_id, action_result, job_name)
 
+        ret_val, resp_json_search_result, job_status = self._get_results(job_id, action_result, job_name)
         if phantom.is_fail(ret_val):
             return ret_val
 
-        ret_val, resp_json_search_result = self._make_rest_call(
-            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-        )
+        if not job_status:
+            return action_result.set_status(phantom.APP_ERROR, "Search job did not finish in time")
 
-        if phantom.is_fail(ret_val):
-            return ret_val
         results = resp_json_search_result.get("results", [])
 
         for result in results:
@@ -697,8 +705,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         summary["num_results"] = total_result
 
         message = "Num results: {0}".format(total_result)
-        if not is_completed_eq_contacted:
-            message += CBD_COMPLETED_NOT_EQ_CONTACTED
+
         return action_result.set_status(phantom.APP_SUCCESS, message)
 
     def _handle_get_alert(self, param):
