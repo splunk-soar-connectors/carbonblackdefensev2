@@ -290,7 +290,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         self.save_progress("Querying policies to test connectivity")
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API, action_result)
+        ret_val, response = self._make_rest_call(CBD_POLICY_SUMMARY_API.format(self._org_key), action_result)
 
         if phantom.is_fail(ret_val):
             self.save_progress(TEST_CONNECTIVITY_FAILED)
@@ -304,12 +304,12 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API, action_result)
+        ret_val, response = self._make_rest_call(CBD_POLICY_SUMMARY_API.format(self._org_key), action_result)
 
         if phantom.is_fail(ret_val):
             return ret_val
 
-        results = response.get("results", [])
+        results = response.get("policies", [])
 
         for result in results:
             action_result.add_data(result)
@@ -324,27 +324,27 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         body = {
-            "policyInfo": {
-                "name": param["name"],
-                "description": param["description"],
-                "priorityLevel": param["priority"],
-                "version": 2,  # This is required to be 2 by the API
-            }
+            "name": param["name"],
+            "org_key": self._org_key,
+            "description": param["description"],
+            "priority_level": param["priority"],
+            "version": 2,  # This is required to be 2 by the API
         }
 
         try:
-            policy_info = json.loads(param.get("json_fields", '{"sensorSettings": []}'))
+            policy_info = json.loads(param.get("json_fields", '{"sensor_settings": []}'))
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "Could not parse JSON from 'json_fields' parameter: {0}".format(e))
-        body["policyInfo"]["policy"] = policy_info
+        for key in policy_info:
+            body[key] = policy_info[key]
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API, action_result, data=body, method="post")
+        ret_val, response = self._make_rest_call(CBD_POLICY_API.format(self._org_key), action_result, data=body, method="post")
 
         if phantom.is_fail(ret_val):
             return ret_val
 
         action_result.add_data(response)
-        action_result.set_summary({"policy_id": response.get("policyId", "UNKNOWN")})
+        action_result.set_summary({"policy_id": response.get("id", "UNKNOWN")})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -354,12 +354,11 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         policy_id = param["id"]
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API_DEL.format(policy_id), action_result, method="delete")
+        ret_val, response = self._make_rest_call(CBD_POLICY_API_DEL.format(self._org_key, policy_id), action_result, method="delete")
 
         if phantom.is_fail(ret_val):
             return ret_val
 
-        action_result.add_data(response)
         action_result.set_summary({"policy_id": policy_id})
 
         return action_result.set_status(phantom.APP_SUCCESS, CBD_POLICY_DELETED)
@@ -376,15 +375,13 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 phantom.APP_ERROR, "Could not parse JSON from rules parameter: {0}".format(self._get_error_message_from_exception(e))
             )
 
-        body = {"ruleInfo": rule_info}
-
-        ret_val, response = self._make_rest_call(CBD_ADD_RULE_API.format(param["id"]), action_result, data=body, method="post")
+        ret_val, response = self._make_rest_call(CBD_ADD_RULE_API.format(self._org_key, param["id"]), action_result, data=rule_info, method="post")
 
         if phantom.is_fail(ret_val):
             return ret_val
 
         action_result.add_data(response)
-        action_result.set_summary({"rule_id": response.get("ruleId", "UNKNOWN")})
+        action_result.set_summary({"rule_id": response.get("id", "UNKNOWN")})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -393,7 +390,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
         rule_id = param["rule_id"]
-        ret_val, response = self._make_rest_call(CBD_DEL_RULE_API.format(param["policy_id"], rule_id), action_result, method="delete")
+        ret_val, response = self._make_rest_call(CBD_DEL_RULE_API.format(self._org_key, param["policy_id"], rule_id), action_result, method="delete")
 
         if phantom.is_fail(ret_val):
             return ret_val
@@ -764,7 +761,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(param))
         policy_id = param["policy_id"]
-        endpoint = CBD_POLICY_API + str(policy_id)
+        endpoint = CBD_POLICY_API.format(self._org_key) + "/" + str(policy_id)
 
         try:
             data = json.loads(param["policy"])
@@ -773,12 +770,15 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 phantom.APP_ERROR, "Policy needs to be valid JSON data: {}".format(self._get_error_message_from_exception(e))
             )
 
-        if "policyInfo" not in data:
-            data = {"policyInfo": data}
-
-        if "id" not in data.get("policyInfo", {}):
+        if "id" not in data:
             try:
-                data["policyInfo"]["id"] = policy_id
+                data["id"] = policy_id
+            except TypeError:
+                return action_result.set_status(phantom.APP_ERROR, CBD_JSON_FORMAT_ERROR)
+
+        if "org_key" not in data:
+            try:
+                data["org_key"] = self._org_key
             except TypeError:
                 return action_result.set_status(phantom.APP_ERROR, CBD_JSON_FORMAT_ERROR)
 
@@ -796,7 +796,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(param))
         policy_id = param["policy_id"]
-        endpoint = CBD_POLICY_API + str(policy_id)
+        endpoint = CBD_POLICY_API.format(self._org_key) + "/" + str(policy_id)
         ret_val, response = self._make_rest_call(endpoint, action_result)
 
         if phantom.is_fail(ret_val):
