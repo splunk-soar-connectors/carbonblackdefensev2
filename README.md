@@ -6,7 +6,7 @@ Connector Version: 1.0.0
 Product Vendor: Carbon Black  
 Product Name: Carbon Black Defense  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 5.2.0  
+Minimum Product Version: 6.2.1  
 
 This app integrates with an instance of Carbon Black defense to run investigative and generic actions
 
@@ -74,7 +74,6 @@ the default ports used by Splunk SOAR.
 
 
 ### Configuration Variables
-
 The below configuration variables are required for this Connector to operate.  These variables are specified when configuring a Carbon Black Defense asset in SOAR.
 
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
