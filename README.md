@@ -74,6 +74,7 @@ the default ports used by Splunk SOAR.
 
 
 ### Configuration Variables
+
 The below configuration variables are required for this Connector to operate.  These variables are specified when configuring a Carbon Black Defense asset in SOAR.
 
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
