@@ -7,7 +7,7 @@
     "product_vendor": "Carbon Black",
     "logo": "logo_carbonblack.svg",
     "logo_dark": "logo_carbonblack_dark.svg",
-    "product_name": "CB Defense",
+    "product_name": "Carbon Black Defense",
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2024 Splunk Inc.",
@@ -1506,7 +1506,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.summary.id",
+                    "data_path": "action_result.summary.rule_id",
                     "data_type": "numeric",
                     "example_values": [
                         1
