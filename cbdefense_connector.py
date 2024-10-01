@@ -335,8 +335,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
             policy_info = json.loads(param.get("json_fields", '{"sensor_settings": []}'))
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "Could not parse JSON from 'json_fields' parameter: {0}".format(e))
-        for key in policy_info:
-            body[key] = policy_info[key]
+        body.update(policy_info)
 
         ret_val, response = self._make_rest_call(CBD_POLICY_API.format(self._org_key), action_result, data=body, method="post")
 
