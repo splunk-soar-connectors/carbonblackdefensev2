@@ -11,7 +11,7 @@
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2024 Splunk Inc.",
-    "app_version": "1.0.0",
+    "app_version": "1.0.1",
     "utctime_updated": "2022-02-09T04:16:31.000000Z",
     "package_name": "phantom_carbonblackdefensev2",
     "main_module": "cbdefense_connector.py",
@@ -845,7 +845,7 @@
                     "data_path": "action_result.data.*.priority_level",
                     "data_type": "string",
                     "example_values": [
-                       "MEDIUM"
+                        "MEDIUM"
                     ]
                 },
                 {
@@ -1170,7 +1170,7 @@
                     "data_path": "action_result.data.*.av_settings.update_servers.servers_for_onsite_devices.*.server",
                     "data_type": "string",
                     "example_values": [
-                         "http://updates.cdc.carbonblack.io/update"
+                        "http://updates.cdc.carbonblack.io/update"
                     ],
                     "contains": [
                         "url"
@@ -1180,8 +1180,8 @@
                     "data_path": "action_result.data.*.av_settings.update_servers.servers_for_onsite_devices.*.preferred",
                     "data_type": "boolean",
                     "example_values": [
-                         true,
-                         false
+                        true,
+                        false
                     ]
                 },
                 {
@@ -1203,7 +1203,7 @@
                     "data_path": "action_result.data.*.rules.*.id",
                     "data_type": "numeric",
                     "example_values": [
-                       1
+                        1
                     ]
                 },
                 {
@@ -1473,7 +1473,7 @@
                     "data_path": "action_result.data.*.required",
                     "data_type": "boolean",
                     "example_values": [
-                        true, 
+                        true,
                         false
                     ]
                 },
@@ -3976,7 +3976,7 @@
                     "data_path": "action_result.data.*.av_settings.update_servers.servers_for_onsite_devices.*.server",
                     "data_type": "string",
                     "example_values": [
-                         "http://updates.cdc.carbonblack.io/update"
+                        "http://updates.cdc.carbonblack.io/update"
                     ],
                     "contains": [
                         "url"
@@ -3986,8 +3986,8 @@
                     "data_path": "action_result.data.*.av_settings.update_servers.servers_for_onsite_devices.*.preferred",
                     "data_type": "boolean",
                     "example_values": [
-                         true,
-                         false
+                        true,
+                        false
                     ]
                 },
                 {
@@ -4009,7 +4009,7 @@
                     "data_path": "action_result.data.*.rules.*.id",
                     "data_type": "numeric",
                     "example_values": [
-                       1
+                        1
                     ]
                 },
                 {
@@ -4281,7 +4281,7 @@
                     "data_path": "action_result.data.*.av_settings.update_servers.servers_for_onsite_devices.*.server",
                     "data_type": "string",
                     "example_values": [
-                         "http://updates.cdc.carbonblack.io/update"
+                        "http://updates.cdc.carbonblack.io/update"
                     ],
                     "contains": [
                         "url"
@@ -4291,8 +4291,8 @@
                     "data_path": "action_result.data.*.av_settings.update_servers.servers_for_onsite_devices.*.preferred",
                     "data_type": "boolean",
                     "example_values": [
-                         true,
-                         false
+                        true,
+                        false
                     ]
                 },
                 {
@@ -4314,7 +4314,7 @@
                     "data_path": "action_result.data.*.rules.*.id",
                     "data_type": "numeric",
                     "example_values": [
-                       1
+                        1
                     ]
                 },
                 {

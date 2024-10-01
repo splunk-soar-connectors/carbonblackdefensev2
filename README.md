@@ -2,7 +2,7 @@
 # Carbon Black Defense V2
 
 Publisher: Splunk  
-Connector Version: 1.0.0  
+Connector Version: 1.0.1  
 Product Vendor: Carbon Black  
 Product Name: Carbon Black Defense  
 Product Version Supported (regex): ".\*"  
