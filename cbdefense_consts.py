@@ -12,26 +12,27 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
-CBD_POLICY_API = "/integrationServices/v3/policy/"
-CBD_POLICY_API_DEL = "/integrationServices/v3/policy/{0}"
+CBD_POLICY_SUMMARY_API = "/policyservice/v1/orgs/{0}/policies/summary"
+CBD_POLICY_API = "/policyservice/v1/orgs/{0}/policies"
+CBD_POLICY_API_DEL = "/policyservice/v1/orgs/{0}/policies/{1}"
 CBD_POLICY_DELETED = "Policy successfully deleted"
 CBD_RULE_DELETED = "Rule successfully deleted"
-CBD_ADD_RULE_API = "/integrationServices/v3/policy/{0}/rule"
-CBD_DEL_RULE_API = "/integrationServices/v3/policy/{0}/rule/{1}"
+CBD_ADD_RULE_API = "/policyservice/v1/orgs/{0}/policies/{1}/rules"
+CBD_DEL_RULE_API = "/policyservice/v1/orgs/{0}/policies/{1}/rules/{2}"
 CBD_LIST_DEVICE_API = "/appservices/v6/orgs/{0}/devices/_search"
 CBD_UPDATE_DEVICE_API = "/appservices/v6/orgs/{0}/device_actions"
 CBD_UPDATED_DEVICE_POLICY = "Successfully updated device's policy"
 CBD_LIST_PROCESS_GET_JOB_API = "/api/investigate/v2/orgs/{0}/processes/search_jobs"
 CBD_LIST_PROCESS_VERIFY_JOB_API = "/api/investigate/v1/orgs/{0}/processes/search_jobs/{1}"
 CBD_LIST_PROCESS_RESULT_API = "/api/investigate/v2/orgs/{0}/processes/search_jobs/{1}/results"
-CBD_LIST_EVENT_GET_JOB_API = "/api/investigate/v2/orgs/{0}/enriched_events/search_jobs"
-CBD_EVENT_JOB_DETAILS_API = "/api/investigate/v2/orgs/{1}/enriched_events/{2}/{0}"
-CBD_EVENT_JOB_SEARCH_API = "/api/investigate/v1/orgs/{1}/enriched_events/{2}/{0}"
-CBD_EVENT_JOB_RESULT_API = "/api/investigate/v2/orgs/{1}/enriched_events/{2}/{0}/results"
-CBD_GET_ALERT_API = "/appservices/v6/orgs/{1}/alerts/{0}"
-CBD_GET_EVENT_API = "/api/investigate/v2/orgs/{0}/enriched_events/detail_jobs"
-CBD_SEARCH_ALERT_API = "/appservices/v6/orgs/{0}/alerts/_search"
+CBD_LIST_EVENT_GET_JOB_API = "/api/investigate/v2/orgs/{0}/observations/search_jobs"
+CBD_EVENT_JOB_SEARCH_API = "/api/investigate/v2/orgs/{1}/observations/{2}/{0}"
+CBD_EVENT_JOB_RESULT_API = "/api/investigate/v2/orgs/{1}/observations/{2}/{0}/results"
+CBD_GET_ALERT_API = "/api/alerts/v7/orgs/{1}/alerts/{0}"
+CBD_GET_EVENT_API = "/api/investigate/v2/orgs/{0}/observations/detail_jobs"
+CBD_SEARCH_ALERT_API = "/api/alerts/v7/orgs/{0}/alerts/_search"
 CBD_DEFAULT_REQUEST_TIMEOUT = 30  # in seconds
+CBD_MAX_RESULTS_TIMEOUT = 180  # in seconds
 CBD_STATE_FILE_CORRUPT_ERROR = (
     "Error occurred while loading the state file due to its unexpected format. "
     "Resetting the state file with the default format. Please try again"

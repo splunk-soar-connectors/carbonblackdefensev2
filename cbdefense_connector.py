@@ -290,7 +290,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         self.save_progress("Querying policies to test connectivity")
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API, action_result)
+        ret_val, response = self._make_rest_call(CBD_POLICY_SUMMARY_API.format(self._org_key), action_result)
 
         if phantom.is_fail(ret_val):
             self.save_progress(TEST_CONNECTIVITY_FAILED)
@@ -304,12 +304,12 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API, action_result)
+        ret_val, response = self._make_rest_call(CBD_POLICY_SUMMARY_API.format(self._org_key), action_result)
 
         if phantom.is_fail(ret_val):
             return ret_val
 
-        results = response.get("results", [])
+        results = response.get("policies", [])
 
         for result in results:
             action_result.add_data(result)
@@ -324,27 +324,26 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         body = {
-            "policyInfo": {
-                "name": param["name"],
-                "description": param["description"],
-                "priorityLevel": param["priority"],
-                "version": 2,  # This is required to be 2 by the API
-            }
+            "name": param["name"],
+            "org_key": self._org_key,
+            "description": param["description"],
+            "priority_level": param["priority"],
+            "version": 2,  # This is required to be 2 by the API
         }
 
         try:
-            policy_info = json.loads(param.get("json_fields", '{"sensorSettings": []}'))
+            policy_info = json.loads(param.get("json_fields", '{"sensor_settings": []}'))
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "Could not parse JSON from 'json_fields' parameter: {0}".format(e))
-        body["policyInfo"]["policy"] = policy_info
+        body.update(policy_info)
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API, action_result, data=body, method="post")
+        ret_val, response = self._make_rest_call(CBD_POLICY_API.format(self._org_key), action_result, data=body, method="post")
 
         if phantom.is_fail(ret_val):
             return ret_val
 
         action_result.add_data(response)
-        action_result.set_summary({"policy_id": response.get("policyId", "UNKNOWN")})
+        action_result.set_summary({"policy_id": response.get("id", "UNKNOWN")})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -354,12 +353,11 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         policy_id = param["id"]
 
-        ret_val, response = self._make_rest_call(CBD_POLICY_API_DEL.format(policy_id), action_result, method="delete")
+        ret_val, response = self._make_rest_call(CBD_POLICY_API_DEL.format(self._org_key, policy_id), action_result, method="delete")
 
         if phantom.is_fail(ret_val):
             return ret_val
 
-        action_result.add_data(response)
         action_result.set_summary({"policy_id": policy_id})
 
         return action_result.set_status(phantom.APP_SUCCESS, CBD_POLICY_DELETED)
@@ -376,15 +374,15 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 phantom.APP_ERROR, "Could not parse JSON from rules parameter: {0}".format(self._get_error_message_from_exception(e))
             )
 
-        body = {"ruleInfo": rule_info}
-
-        ret_val, response = self._make_rest_call(CBD_ADD_RULE_API.format(param["id"]), action_result, data=body, method="post")
+        ret_val, response = self._make_rest_call(
+            CBD_ADD_RULE_API.format(self._org_key, param["id"]), action_result, data=rule_info, method="post"
+        )
 
         if phantom.is_fail(ret_val):
             return ret_val
 
         action_result.add_data(response)
-        action_result.set_summary({"rule_id": response.get("ruleId", "UNKNOWN")})
+        action_result.set_summary({"rule_id": response.get("id", "UNKNOWN")})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -393,7 +391,9 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
         rule_id = param["rule_id"]
-        ret_val, response = self._make_rest_call(CBD_DEL_RULE_API.format(param["policy_id"], rule_id), action_result, method="delete")
+        ret_val, response = self._make_rest_call(
+            CBD_DEL_RULE_API.format(self._org_key, param["policy_id"], rule_id), action_result, method="delete"
+        )
 
         if phantom.is_fail(ret_val):
             return ret_val
@@ -606,21 +606,18 @@ class CarbonBlackDefenseConnector(BaseConnector):
         )
         if phantom.is_fail(ret_val):
             return ret_val
-
         job_id = resp_json.get("job_id")
         job_name = "search_jobs"
-        ret_val, is_completed_eq_contacted = self.retry_search_event(job_id, action_result, job_name)
+
+        ret_val, resp_json_search_result, job_status = self._get_results(job_id, action_result, job_name)
         if phantom.is_fail(ret_val):
             return ret_val
 
-        ret_val, resp_json_search_result = self._make_rest_call(
-            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-        )
-
-        if phantom.is_fail(ret_val):
-            return ret_val
+        if not job_status:
+            return action_result.set_status(phantom.APP_ERROR, "Search job did not finish in time")
 
         results = resp_json_search_result.get("results", [])
+        self.debug_print(f"responses json for results is {results}")
 
         for result in results:
             action_result.add_data(result)
@@ -629,9 +626,31 @@ class CarbonBlackDefenseConnector(BaseConnector):
         summary["num_results"] = total_result
 
         message = "Num results: {0}".format(total_result)
-        if not is_completed_eq_contacted:
-            message += CBD_COMPLETED_NOT_EQ_CONTACTED
         return action_result.set_status(phantom.APP_SUCCESS, message)
+
+    def _get_results(self, job_id, action_result, job_name):
+        start_time = time.time()
+        resp_json_search_event = None
+        ret_val = None
+
+        while True:
+            elapsed_time = time.time() - start_time
+            if elapsed_time > CBD_MAX_RESULTS_TIMEOUT:
+                return ret_val, resp_json_search_event, False
+
+            if job_name == "search_jobs" or job_name == "detail_jobs":
+                params = {"rows": 500}
+                ret_val, resp_json_search_event = self._make_rest_call(
+                    CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, params=params, is_new_api=True
+                )
+
+            if phantom.is_fail(ret_val):
+                return ret_val, resp_json_search_event, False
+
+            if resp_json_search_event.get("completed") == resp_json_search_event.get("contacted"):
+                return ret_val, resp_json_search_event, True
+
+            time.sleep(5)
 
     def retry_search_event(self, job_id, action_result, job_name):
         max_retry = 3
@@ -640,15 +659,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         status = False
         while max_retry > 0:
             max_retry -= 1
-            if job_name == "search_jobs":
-                ret_val, resp_json_search_event = self._make_rest_call(
-                    CBD_EVENT_JOB_SEARCH_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-                )
-            elif job_name == "detail_jobs":
-                ret_val, resp_json_search_event = self._make_rest_call(
-                    CBD_EVENT_JOB_DETAILS_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-                )
-            elif job_name == "process_jobs":
+            if job_name == "process_jobs":
                 ret_val, resp_json_search_event = self._make_rest_call(
                     CBD_LIST_PROCESS_VERIFY_JOB_API.format(self._org_key, job_id), action_result, is_new_api=True
                 )
@@ -669,7 +680,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         params = {}
         my_list = list(filter(None, param["id"].split(",")))
-        params["event_ids"] = my_list
+        params["observation_ids"] = my_list
         self.debug_print("query parameters for getEvent are", format(params))
 
         ret_val, resp_json = self._make_rest_call(
@@ -680,17 +691,14 @@ class CarbonBlackDefenseConnector(BaseConnector):
             return ret_val
         job_id = resp_json.get("job_id")
         job_name = "detail_jobs"
-        ret_val, is_completed_eq_contacted = self.retry_search_event(job_id, action_result, job_name)
 
+        ret_val, resp_json_search_result, job_status = self._get_results(job_id, action_result, job_name)
         if phantom.is_fail(ret_val):
             return ret_val
 
-        ret_val, resp_json_search_result = self._make_rest_call(
-            CBD_EVENT_JOB_RESULT_API.format(job_id, self._org_key, job_name), action_result, is_new_api=True
-        )
+        if not job_status:
+            return action_result.set_status(phantom.APP_ERROR, "Search job did not finish in time")
 
-        if phantom.is_fail(ret_val):
-            return ret_val
         results = resp_json_search_result.get("results", [])
 
         for result in results:
@@ -700,8 +708,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         summary["num_results"] = total_result
 
         message = "Num results: {0}".format(total_result)
-        if not is_completed_eq_contacted:
-            message += CBD_COMPLETED_NOT_EQ_CONTACTED
+
         return action_result.set_status(phantom.APP_SUCCESS, message)
 
     def _handle_get_alert(self, param):
@@ -764,7 +771,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(param))
         policy_id = param["policy_id"]
-        endpoint = CBD_POLICY_API + str(policy_id)
+        endpoint = CBD_POLICY_API.format(self._org_key) + "/" + str(policy_id)
 
         try:
             data = json.loads(param["policy"])
@@ -773,12 +780,15 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 phantom.APP_ERROR, "Policy needs to be valid JSON data: {}".format(self._get_error_message_from_exception(e))
             )
 
-        if "policyInfo" not in data:
-            data = {"policyInfo": data}
-
-        if "id" not in data.get("policyInfo", {}):
+        if "id" not in data:
             try:
-                data["policyInfo"]["id"] = policy_id
+                data["id"] = policy_id
+            except TypeError:
+                return action_result.set_status(phantom.APP_ERROR, CBD_JSON_FORMAT_ERROR)
+
+        if "org_key" not in data:
+            try:
+                data["org_key"] = self._org_key
             except TypeError:
                 return action_result.set_status(phantom.APP_ERROR, CBD_JSON_FORMAT_ERROR)
 
@@ -796,7 +806,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(param))
         policy_id = param["policy_id"]
-        endpoint = CBD_POLICY_API + str(policy_id)
+        endpoint = CBD_POLICY_API.format(self._org_key) + "/" + str(policy_id)
         ret_val, response = self._make_rest_call(endpoint, action_result)
 
         if phantom.is_fail(ret_val):
