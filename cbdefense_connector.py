@@ -1,6 +1,6 @@
 # File: cbdefense_connector.py
 #
-# Copyright (c) 2024 Splunk Inc.
+# Copyright (c) 2024-2025 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,11 +34,9 @@ class RetVal(tuple):
 
 
 class CarbonBlackDefenseConnector(BaseConnector):
-
     def __init__(self):
-
         # Call the BaseConnectors init first
-        super(CarbonBlackDefenseConnector, self).__init__()
+        super().__init__()
 
         self._state = None
         self._base_url = None
@@ -49,7 +47,6 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self._status_code = None
 
     def initialize(self):
-
         self._state = self.load_state()
 
         if not isinstance(self._state, dict):
@@ -62,11 +59,11 @@ class CarbonBlackDefenseConnector(BaseConnector):
         self._base_url = config["api_url"].strip("/")
 
         if "api_key" in config and "api_connector_id" in config:
-            self._api_auth = "{0}/{1}".format(config["api_key"], config["api_connector_id"])
+            self._api_auth = "{}/{}".format(config["api_key"], config["api_connector_id"])
         if "siem_key" in config and "siem_connector_id" in config:
-            self._siem_auth = "{0}/{1}".format(config["siem_key"], config["siem_connector_id"])
+            self._siem_auth = "{}/{}".format(config["siem_key"], config["siem_connector_id"])
         if "custom_api_key" in config and "custom_api_connector_id" in config:
-            self._custom_api_auth = "{0}/{1}".format(config["custom_api_key"], config["custom_api_connector_id"])
+            self._custom_api_auth = "{}/{}".format(config["custom_api_key"], config["custom_api_connector_id"])
         if "org_key" in config:
             self._org_key = config["org_key"]
 
@@ -75,7 +72,6 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return phantom.APP_SUCCESS
 
     def finalize(self):
-
         self.save_state(self._state)
         return phantom.APP_SUCCESS
 
@@ -140,17 +136,15 @@ class CarbonBlackDefenseConnector(BaseConnector):
             error_code = ERROR_CODE_EXCEPTION
             error_msg = ERROR_MSG_EXCEPTION
 
-        return "Error Code: {0}. Error Message: {1}".format(error_code, error_msg)
+        return f"Error Code: {error_code}. Error Message: {error_msg}"
 
     def _process_empty_reponse(self, response, action_result):
-
         if response.status_code == 200 or response.status_code == 204:
             return RetVal(phantom.APP_SUCCESS, {})
 
         return RetVal(action_result.set_status(phantom.APP_ERROR, CBD_EMPTY_RESPONSE_NO_HEADER), None)
 
     def _process_html_response(self, response, action_result):
-
         # An html response, treat it like an error
         status_code = response.status_code
 
@@ -163,21 +157,20 @@ class CarbonBlackDefenseConnector(BaseConnector):
         except Exception:
             error_text = CBD_ERROR_TEXT
 
-        message = "Status Code: {0}. Data from server:\n{1}\n".format(status_code, error_text)
+        message = f"Status Code: {status_code}. Data from server:\n{error_text}\n"
 
         message = message.replace("{", "{{").replace("}", "}}")
 
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
     def _process_json_response(self, r, action_result):
-
         # Try a json parse
         try:
             resp_json = r.json()
         except Exception as e:
             return RetVal(
                 action_result.set_status(
-                    phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(self._get_error_message_from_exception(e))
+                    phantom.APP_ERROR, f"Unable to parse JSON response. Error: {self._get_error_message_from_exception(e)}"
                 ),
                 None,
             )
@@ -190,14 +183,13 @@ class CarbonBlackDefenseConnector(BaseConnector):
         if "message" in resp_json:
             message = resp_json["message"]
         else:
-            message = "Error from server. Status Code: {0} Data from server: {1}".format(
+            message = "Error from server. Status Code: {} Data from server: {}".format(
                 r.status_code, r.text.replace("{", "{{").replace("}", "}}")
             )
 
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
     def _process_response(self, r, action_result):
-
         # store the r_text in debug data, it will get dumped in the logs if the action fails
         if hasattr(action_result, "add_debug_data"):
             action_result.add_debug_data({"r_status_code": r.status_code})
@@ -225,14 +217,13 @@ class CarbonBlackDefenseConnector(BaseConnector):
             return self._process_empty_reponse(r, action_result)
 
         # everything else is actually an error at this point
-        message = "Can't process response from server. Status Code: {0} Data from server: {1}".format(
+        message = "Can't process response from server. Status Code: {} Data from server: {}".format(
             r.status_code, r.text.replace("{", "{{").replace("}", "}}")
         )
 
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
     def _make_rest_call(self, endpoint, action_result, headers=None, params=None, data=None, method="get", is_new_api=False):
-
         config = self.get_config()
 
         resp_json = None
@@ -240,7 +231,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         try:
             request_func = getattr(requests, method)
         except AttributeError:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "Invalid method: {0}".format(method)), resp_json)
+            return RetVal(action_result.set_status(phantom.APP_ERROR, f"Invalid method: {method}"), resp_json)
 
         # Create a URL to connect to
         url = self._base_url + endpoint
@@ -277,16 +268,13 @@ class CarbonBlackDefenseConnector(BaseConnector):
             )
         except Exception as e:
             return RetVal(
-                action_result.set_status(
-                    phantom.APP_ERROR, "Error Connecting to server. Details: {0}".format(self._get_error_message_from_exception(e))
-                ),
+                action_result.set_status(phantom.APP_ERROR, f"Error Connecting to server. Details: {self._get_error_message_from_exception(e)}"),
                 resp_json,
             )
 
         return self._process_response(r, action_result)
 
     def _handle_test_connectivity(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
         self.save_progress("Querying policies to test connectivity")
 
@@ -300,8 +288,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_policies(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         ret_val, response = self._make_rest_call(CBD_POLICY_SUMMARY_API.format(self._org_key), action_result)
@@ -319,8 +306,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_create_policy(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         body = {
@@ -334,7 +320,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         try:
             policy_info = json.loads(param.get("json_fields", '{"sensor_settings": []}'))
         except Exception as e:
-            return action_result.set_status(phantom.APP_ERROR, "Could not parse JSON from 'json_fields' parameter: {0}".format(e))
+            return action_result.set_status(phantom.APP_ERROR, f"Could not parse JSON from 'json_fields' parameter: {e}")
         body.update(policy_info)
 
         ret_val, response = self._make_rest_call(CBD_POLICY_API.format(self._org_key), action_result, data=body, method="post")
@@ -348,8 +334,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_delete_policy(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
         policy_id = param["id"]
 
@@ -363,15 +348,14 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, CBD_POLICY_DELETED)
 
     def _handle_add_rule(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         try:
             rule_info = json.loads(param["rules"])
         except Exception as e:
             return action_result.set_status(
-                phantom.APP_ERROR, "Could not parse JSON from rules parameter: {0}".format(self._get_error_message_from_exception(e))
+                phantom.APP_ERROR, f"Could not parse JSON from rules parameter: {self._get_error_message_from_exception(e)}"
             )
 
         ret_val, response = self._make_rest_call(
@@ -387,8 +371,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_delete_rule(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
         rule_id = param["rule_id"]
         ret_val, response = self._make_rest_call(
@@ -404,8 +387,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, CBD_RULE_DELETED)
 
     def _handle_list_devices(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         params = {}
@@ -436,8 +418,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_device(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
         device_id = param["device_id"]
         policy_id = param["policy_id"]
@@ -458,15 +439,15 @@ class CarbonBlackDefenseConnector(BaseConnector):
         if "ip" in param:
             ip = param["ip"]
             ip = ipaddress.ip_address(ip).exploded
-            query += "(device_external_ip:{0} OR device_internal_ip:{0})".format(ip)
+            query += f"(device_external_ip:{ip} OR device_internal_ip:{ip})"
         if "host_name" in param:
-            query_added = "device_name:{0}".format(param["host_name"])
+            query_added = "device_name:{}".format(param["host_name"])
             if query:
                 query += " AND " + query_added
             else:
                 query += query_added
         if "owner" in param:
-            query_added = "device_installed_by:{0}".format(param["owner"])
+            query_added = "device_installed_by:{}".format(param["owner"])
             if query:
                 query += " AND " + query_added
             else:
@@ -486,8 +467,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return params, query, result_params
 
     def _handle_list_processes(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         params = {}
@@ -534,7 +514,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         total_result = len(results)
         summary = action_result.update_summary({})
         summary["num_results"] = total_result
-        message = "Num results: {0}".format(total_result)
+        message = f"Num results: {total_result}"
         if not is_completed_eq_contacted:
             message += CBD_COMPLETED_NOT_EQ_CONTACTED
         return action_result.set_status(phantom.APP_SUCCESS, message)
@@ -543,33 +523,33 @@ class CarbonBlackDefenseConnector(BaseConnector):
         if "ip" in param:
             ip = param["ip"]
             ip = ipaddress.ip_address(ip).exploded
-            query += "(device_external_ip:{0} OR device_internal_ip:{0})".format(ip)
+            query += f"(device_external_ip:{ip} OR device_internal_ip:{ip})"
         if "host_name" in param:
-            query_added = "device_name:{0}".format(param["host_name"])
+            query_added = "device_name:{}".format(param["host_name"])
             if query:
                 query += " AND " + query_added
             else:
                 query += query_added
         if "owner" in param:
-            query_added = "device_installed_by:{0}".format(param["owner"])
+            query_added = "device_installed_by:{}".format(param["owner"])
             if query:
                 query += " AND " + query_added
             else:
                 query += query_added
         if "application" in param:
-            query_added = "process_original_filename:{0}".format(param["application"])
+            query_added = "process_original_filename:{}".format(param["application"])
             if query:
                 query += " AND " + query_added
             else:
                 query += query_added
         if "event_type" in param:
-            query_added = "enriched_event_type:{0}".format(param["event_type"])
+            query_added = "enriched_event_type:{}".format(param["event_type"])
             if query:
                 query += " AND " + query_added
             else:
                 query += query_added
         if "hash" in param:
-            query_added = "process_hash:{0}".format(param["hash"])
+            query_added = "process_hash:{}".format(param["hash"])
             if query:
                 query += " AND " + query_added
             else:
@@ -589,8 +569,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return params, query
 
     def _handle_list_events(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         params = {}
@@ -625,7 +604,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         summary = action_result.update_summary({})
         summary["num_results"] = total_result
 
-        message = "Num results: {0}".format(total_result)
+        message = f"Num results: {total_result}"
         return action_result.set_status(phantom.APP_SUCCESS, message)
 
     def _get_results(self, job_id, action_result, job_name):
@@ -676,7 +655,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return ret_val, status
 
     def _handle_get_event(self, param):
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
         params = {}
         my_list = list(filter(None, param["id"].split(",")))
@@ -707,12 +686,12 @@ class CarbonBlackDefenseConnector(BaseConnector):
         summary = action_result.update_summary({})
         summary["num_results"] = total_result
 
-        message = "Num results: {0}".format(total_result)
+        message = f"Num results: {total_result}"
 
         return action_result.set_status(phantom.APP_SUCCESS, message)
 
     def _handle_get_alert(self, param):
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         id = param["id"]
@@ -727,7 +706,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
                 "criteria": {
                     "create_time": {"range": "all"},
                 },
-                "query": "alert_id:{}".format(id),
+                "query": f"alert_id:{id}",
             }
             ret_val, resp_json = self._make_rest_call(
                 CBD_SEARCH_ALERT_API.format(self._org_key), action_result, method="post", data=data, is_new_api=True
@@ -739,7 +718,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
             results = resp_json.get("results", [])
 
             if not results:
-                return action_result.set_status(phantom.APP_ERROR, "Alert ID '{}' does not exist".format(id))
+                return action_result.set_status(phantom.APP_ERROR, f"Alert ID '{id}' does not exist")
 
             resp_json = results[0]
 
@@ -750,7 +729,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_notifications(self, param):
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         ret_val, resp_json = self._make_rest_call(CBD_NOTIFICATION_API, action_result)
@@ -768,7 +747,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_policy(self, param):
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(param))
         policy_id = param["policy_id"]
         endpoint = CBD_POLICY_API.format(self._org_key) + "/" + str(policy_id)
@@ -777,7 +756,7 @@ class CarbonBlackDefenseConnector(BaseConnector):
             data = json.loads(param["policy"])
         except Exception as e:
             return action_result.set_status(
-                phantom.APP_ERROR, "Policy needs to be valid JSON data: {}".format(self._get_error_message_from_exception(e))
+                phantom.APP_ERROR, f"Policy needs to be valid JSON data: {self._get_error_message_from_exception(e)}"
             )
 
         if "id" not in data:
@@ -803,21 +782,20 @@ class CarbonBlackDefenseConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, CBD_POLICY_UPDATED_SUCCESS)
 
     def _handle_get_policy(self, param):
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(param))
         policy_id = param["policy_id"]
         endpoint = CBD_POLICY_API.format(self._org_key) + "/" + str(policy_id)
         ret_val, response = self._make_rest_call(endpoint, action_result)
 
         if phantom.is_fail(ret_val):
-            return action_result.set_status(phantom.APP_ERROR, "Error retrieving policy: {0}".format(response))
+            return action_result.set_status(phantom.APP_ERROR, f"Error retrieving policy: {response}")
         action_result.add_data(response)
         action_result.set_summary({"policy_id": policy_id})
 
         return action_result.set_status(phantom.APP_SUCCESS, CBD_POLICY_RETRIEVED_SUCCESS)
 
     def handle_action(self, param):
-
         ret_val = phantom.APP_SUCCESS
 
         # Get the action that we are supposed to execute for this App Run
@@ -860,7 +838,6 @@ class CarbonBlackDefenseConnector(BaseConnector):
 
 
 if __name__ == "__main__":
-
     import argparse
     from sys import exit
 
