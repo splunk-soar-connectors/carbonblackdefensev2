@@ -1,9 +1,9 @@
 # Carbon Black Defense V2
 
-Publisher: Splunk \
-Connector Version: 1.0.1 \
-Product Vendor: Carbon Black \
-Product Name: Carbon Black Defense \
+Publisher: Splunk <br>
+Connector Version: 1.0.1 <br>
+Product Vendor: Carbon Black <br>
+Product Name: Carbon Black Defense <br>
 Minimum Product Version: 6.2.1
 
 This app integrates with an instance of Carbon Black defense to run investigative and generic actions
@@ -73,27 +73,27 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the supplied API Key \
-[list devices](#action-list-devices) - List devices connected to CB Defense \
-[update device](#action-update-device) - Change the policy of a device connected to CB Defense \
-[list policies](#action-list-policies) - List policies that exist on CB Defense \
-[add policy](#action-add-policy) - Create a new policy on CB Defense \
-[delete policy](#action-delete-policy) - Delete a policy on CB Defense \
-[add rule](#action-add-rule) - Add a rule to a policy on CB Defense \
-[delete rule](#action-delete-rule) - Delete a rule from a policy on CB Defense \
-[list processes](#action-list-processes) - List processes that match supplied filter criteria \
-[list events](#action-list-events) - List events that match supplied filter criteria \
-[get event](#action-get-event) - Get information about an event \
-[get alert](#action-get-alert) - Get information about an alert \
-[get notifications](#action-get-notifications) - Get notifications from CB Defense \
-[update policy](#action-update-policy) - Updates an existing policy on the Carbon Black Defense server \
+[test connectivity](#action-test-connectivity) - Validate the supplied API Key <br>
+[list devices](#action-list-devices) - List devices connected to CB Defense <br>
+[update device](#action-update-device) - Change the policy of a device connected to CB Defense <br>
+[list policies](#action-list-policies) - List policies that exist on CB Defense <br>
+[add policy](#action-add-policy) - Create a new policy on CB Defense <br>
+[delete policy](#action-delete-policy) - Delete a policy on CB Defense <br>
+[add rule](#action-add-rule) - Add a rule to a policy on CB Defense <br>
+[delete rule](#action-delete-rule) - Delete a rule from a policy on CB Defense <br>
+[list processes](#action-list-processes) - List processes that match supplied filter criteria <br>
+[list events](#action-list-events) - List events that match supplied filter criteria <br>
+[get event](#action-get-event) - Get information about an event <br>
+[get alert](#action-get-alert) - Get information about an alert <br>
+[get notifications](#action-get-notifications) - Get notifications from CB Defense <br>
+[update policy](#action-update-policy) - Updates an existing policy on the Carbon Black Defense server <br>
 [get policy](#action-get-policy) - Retrieves an existing policy from the Carbon Black Defense server
 
 ## action: 'test connectivity'
 
 Validate the supplied API Key
 
-Type: **test** \
+Type: **test** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -108,7 +108,7 @@ No Output
 
 List devices connected to CB Defense
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 The results of this action can be paged using the <b>start</b> and the <b>limit</b> parameters. For example, to return the first 10 results, set the <b>start</b> to 1 and the <b>limit</b> to 10. To return the next 10 results, set the <b>start</b> to 11 and keep the <b>limit</b> at 10. This Action requires Custom API Key, Custom API Connector ID, and Organization Key.
@@ -224,7 +224,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Change the policy of a device connected to CB Defense
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 This Action requires Custom API Key, Custom API Connector ID, and Organization Key.
@@ -253,7 +253,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 List policies that exist on CB Defense
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 This Action requires API Key and API Connector ID.
@@ -283,7 +283,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Create a new policy on CB Defense
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 The <b>json_fields</b> parameter can be used to configure other fields in the created policy. This parameter takes a JSON dictionary with the format of the policy field seen <a href="https://developer.carbonblack.com/reference/cb-defense/1/rest-api/#create-new-policy">here</a>. In some negative scenarios action will fail with an API error message "Error creating policy - Error modifying policy" but policy will be created on the server with the given name. This Action requires API Key and API Connector ID.
@@ -360,7 +360,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Delete a policy on CB Defense
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 This Action requires API Key and API Connector ID.
@@ -386,7 +386,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Add a rule to a policy on CB Defense
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 This Action requires API Key and API Connector ID.
@@ -420,7 +420,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Delete a rule from a policy on CB Defense
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 This Action requires API Key and API Connector ID.
@@ -448,7 +448,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 List processes that match supplied filter criteria
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 The examples for the <b>search_span</b> parameter are <b>1d</b>, <b>1w</b>, <b>2y</b>, <b>2h</b>, <b>1m</b>, or <b>50s</b> (where y=year, w=week, d=day, h=hour, m=minute, s=second). The results of this action can be paged using the <b>start</b> and <b>limit</b> parameters. For example, to return the first 10 results, set the <b>start</b> to 1 and the <b>limit</b> to 10. To return the next 10 results, set the <b>start</b> to 11 and keep the <b>limit</b> at 10. This Action requires Custom API Key, Custom API Connector ID, and Organization Key.
@@ -514,7 +514,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 List events that match supplied filter criteria
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 The parameters <b>ip</b>, <b>host_name</b>, <b>hash</b>, <b>application</b>, and <b>owner</b> apply only to the device the event came from. Thus, for example, the <b>ip</b> parameters cannot be used to search for a destination IP. The examples for the <b>search_span</b> parameter are <b>1d</b>, <b>1w</b>, <b>2y</b>, <b>2h</b>, <b>1m</b>, or <b>50s</b> (where y=year, w=week, d=day, h=hour, m=minute, s=second). This Action requires Custom API Key, Custom API Connector ID, and Organization Key.
@@ -579,7 +579,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Get information about an event
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 This Action requires Custom API Key, Custom API Connector ID, and Organization Key.
@@ -671,7 +671,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Get information about an alert
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 This Action requires Custom API Key, Custom API Connector ID, and Organization Key.
@@ -761,7 +761,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Get notifications from CB Defense
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 This action retrieves the current list of notifications from CB Defense. Once a notification is retrieved, it cannot be retrieved again. This Action requires SIEM Key and SIEM Connector ID.
@@ -807,7 +807,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Updates an existing policy on the Carbon Black Defense server
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 This Action requires API Key and API Connector ID.
@@ -880,7 +880,7 @@ summary.total_objects_successful | numeric | | |
 
 Retrieves an existing policy from the Carbon Black Defense server
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 This Action requires API Key and API Connector ID.
