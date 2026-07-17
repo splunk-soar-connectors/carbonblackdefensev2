@@ -10,7 +10,7 @@
     "product_name": "Carbon Black Defense",
     "product_version_regex": ".*",
     "publisher": "Splunk",
-    "license": "Copyright (c) 2024-2025 Splunk Inc.",
+    "license": "Copyright (c) 2024-2026 Splunk Inc.",
     "app_version": "1.0.2",
     "utctime_updated": "2025-09-05T16:29:05.156883Z",
     "package_name": "phantom_carbonblackdefensev2",
